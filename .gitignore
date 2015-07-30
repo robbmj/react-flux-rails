@@ -1,3 +1,5 @@
 node_modules/*
 public/comments.json
-server.js
+public/bundle.js
+public/bundle.min.js
+npm-debug.log
