@@ -72,7 +72,7 @@ AppDispatcher.register(function(action) {
     case CommentConstants.COMMENT_CREATE:
 
       text = action.text.trim();
-      author = action.text.trim();
+      author = action.author.trim();
       if (text !== '') {
         create(author, text);
         CommentStore.emitChange();

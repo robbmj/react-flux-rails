@@ -22,7 +22,7 @@ var Comment = React.createClass({
     return (
       <div className="comment" data-commentid={this.props.commentid}>
         <h2 className="commentAuthor">
-          {this.props.author} - {this.props.commentid}
+          {this.props.author}
         </h2>
         <span dangerouslySetInnerHTML={{__html: rawMarkup}} />
         <button onClick={this.handleDestroy.bind(this, this.props.commentid)} key={this.props.commentid}>
@@ -75,9 +75,8 @@ var CommentList = React.createClass({
   render: function() {
     var commentNodes = this.props.data.map(function (comment, i) {
       return (
-        <Comment author={comment.author}>
+        <Comment author={comment.author} commentid={comment.id}>
           {comment.text}
-          <button onClick={this.handleDestroy.bind(this, i)} key={i}>Delete Comment</button>
         </Comment>
       );
     });
