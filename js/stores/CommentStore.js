@@ -11,107 +11,54 @@
 
 var AppDispatcher = require('../dispatcher/AppDispatcher');
 var EventEmitter = require('events').EventEmitter;
-var TodoConstants = require('../constants/TodoConstants');
+var CommentConstants = require('../constants/CommentConstants');
 var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 
-var _todos = {};
+var _comments = [];
 
 /**
- * Create a TODO item.
- * @param  {string} text The content of the TODO
+ * Create a Comment.
+ * @param  {string} author The author of the comment
+ * @param  {string} text The comment text
  */
-function create(text) {
+function create(author, text) {
   // Hand waving here -- not showing how this interacts with XHR or persistent
   // server-side storage.
   // Using the current timestamp + random number in place of a real id.
   var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-  _todos[id] = {
+  _comments.push({
     id: id,
-    complete: false,
+    author: author,
     text: text
-  };
+  });
 }
 
 /**
- * Update a TODO item.
- * @param  {string} id
- * @param {object} updates An object literal containing only the data to be
- *     updated.
- */
-function update(id, updates) {
-  _todos[id] = assign({}, _todos[id], updates);
-}
-
-/**
- * Update all of the TODO items with the same object.
- *     the data to be updated.  Used to mark all TODOs as completed.
- * @param  {object} updates An object literal containing only the data to be
- *     updated.
- */
-function updateAll(updates) {
-  for (var id in _todos) {
-    update(id, updates);
-  }
-}
-
-/**
- * Delete a TODO item.
+ * Delete a COmment.
  * @param  {string} id
  */
 function destroy(id) {
-  delete _todos[id];
+  _comments = _comments.filter(function (comment) {
+    return comment.id != id;
+  });
 }
 
-/**
- * Delete all the completed TODO items.
- */
-function destroyCompleted() {
-  for (var id in _todos) {
-    if (_todos[id].complete) {
-      destroy(id);
-    }
-  }
-}
+var CommentStore = assign({}, EventEmitter.prototype, {
 
-var TodoStore = assign({}, EventEmitter.prototype, {
-
-  /**
-   * Tests whether all the remaining TODO items are marked as completed.
-   * @return {boolean}
-   */
-  areAllComplete: function() {
-    for (var id in _todos) {
-      if (!_todos[id].complete) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  /**
-   * Get the entire collection of TODOs.
-   * @return {object}
-   */
   getAll: function() {
-    return _todos;
+    return _comments;
   },
 
   emitChange: function() {
     this.emit(CHANGE_EVENT);
   },
 
-  /**
-   * @param {function} callback
-   */
   addChangeListener: function(callback) {
     this.on(CHANGE_EVENT, callback);
   },
 
-  /**
-   * @param {function} callback
-   */
   removeChangeListener: function(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   }
@@ -119,52 +66,22 @@ var TodoStore = assign({}, EventEmitter.prototype, {
 
 // Register callback to handle all updates
 AppDispatcher.register(function(action) {
-  var text;
+  var text, author;
 
-  switch(action.actionType) {
-    case TodoConstants.TODO_CREATE:
+  switch (action.actionType) {
+    case CommentConstants.COMMENT_CREATE:
+
       text = action.text.trim();
+      author = action.text.trim();
       if (text !== '') {
-        create(text);
-        TodoStore.emitChange();
+        create(author, text);
+        CommentStore.emitChange();
       }
       break;
 
-    case TodoConstants.TODO_TOGGLE_COMPLETE_ALL:
-      if (TodoStore.areAllComplete()) {
-        updateAll({complete: false});
-      } else {
-        updateAll({complete: true});
-      }
-      TodoStore.emitChange();
-      break;
-
-    case TodoConstants.TODO_UNDO_COMPLETE:
-      update(action.id, {complete: false});
-      TodoStore.emitChange();
-      break;
-
-    case TodoConstants.TODO_COMPLETE:
-      update(action.id, {complete: true});
-      TodoStore.emitChange();
-      break;
-
-    case TodoConstants.TODO_UPDATE_TEXT:
-      text = action.text.trim();
-      if (text !== '') {
-        update(action.id, {text: text});
-        TodoStore.emitChange();
-      }
-      break;
-
-    case TodoConstants.TODO_DESTROY:
+    case CommentConstants.COMMENT_DESTROY:
       destroy(action.id);
-      TodoStore.emitChange();
-      break;
-
-    case TodoConstants.TODO_DESTROY_COMPLETED:
-      destroyCompleted();
-      TodoStore.emitChange();
+      CommentStore.emitChange();
       break;
 
     default:
@@ -172,4 +89,4 @@ AppDispatcher.register(function(action) {
   }
 });
 
-module.exports = TodoStore;
+module.exports = CommentStore;

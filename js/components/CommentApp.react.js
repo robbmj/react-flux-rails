@@ -1,70 +1,124 @@
-/**
- * Copyright (c) 2014-2015, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
 
-/**
- * This component operates as a "Controller-View".  It listens for changes in
- * the TodoStore and passes the new data to its children.
- */
-
-var Footer = require('./Footer.react');
-var Header = require('./Header.react');
-var MainSection = require('./MainSection.react');
 var React = require('react');
-var TodoStore = require('../stores/TodoStore');
-
+var CommentStore = require('../stores/CommentStore');
+var CommentActions = require('../actions/CommentActions');
 /**
  * Retrieve the current TODO data from the TodoStore
  */
-function getTodoState() {
+ function getCommentState() {
   return {
-    allTodos: TodoStore.getAll(),
-    areAllComplete: TodoStore.areAllComplete()
+    data: CommentStore.getAll()
   };
 }
 
-var TodoApp = React.createClass({
+var Comment = React.createClass({
+
+  handleDestroy: function(id) {
+    CommentActions.destroy(id);
+  },
+
+  render: function() {
+    var rawMarkup = marked(this.props.children.toString(), {sanitize: true});
+    return (
+      <div className="comment" data-commentid={this.props.commentid}>
+        <h2 className="commentAuthor">
+          {this.props.author} - {this.props.commentid}
+        </h2>
+        <span dangerouslySetInnerHTML={{__html: rawMarkup}} />
+        <button onClick={this.handleDestroy.bind(this, this.props.commentid)} key={this.props.commentid}>
+          Delete Comment
+        </button>
+      </div>
+    );
+  }
+});
+
+var CommentBox = React.createClass({
 
   getInitialState: function() {
-    return getTodoState();
+    return {data: []};
+  },
+
+  handleCommentSubmit: function(comment) {
+    CommentActions.create(comment.author, comment.text);
   },
 
   componentDidMount: function() {
-    TodoStore.addChangeListener(this._onChange);
+    CommentStore.addChangeListener(this._onChange);
   },
 
   componentWillUnmount: function() {
-    TodoStore.removeChangeListener(this._onChange);
+    CommentStore.removeChangeListener(this._onChange);
   },
 
-  /**
-   * @return {object}
-   */
   render: function() {
-  	return (
-      <div>
-        <Header />
-        <MainSection
-          allTodos={this.state.allTodos}
-          areAllComplete={this.state.areAllComplete}
-        />
-        <Footer allTodos={this.state.allTodos} />
+    return (
+      <div className="commentBox">
+        <h1>Comment Box</h1>
+        <CommentList data={this.state.data} />
+        <CommentForm onCommentSubmit={this.handleCommentSubmit} />
       </div>
-  	);
+    );
   },
 
   /**
-   * Event handler for 'change' events coming from the TodoStore
+   * Event handler for 'change' events coming from the CommentStore
    */
   _onChange: function() {
-    this.setState(getTodoState());
+    this.setState(getCommentState());
   }
 
 });
 
-module.exports = TodoApp;
+var CommentList = React.createClass({
+
+  render: function() {
+    var commentNodes = this.props.data.map(function (comment, i) {
+      return (
+        <Comment author={comment.author}>
+          {comment.text}
+          <button onClick={this.handleDestroy.bind(this, i)} key={i}>Delete Comment</button>
+        </Comment>
+      );
+    });
+
+    return (
+      <div className="commentList">
+        {commentNodes}
+      </div>
+    );
+  }
+});
+
+var CommentForm = React.createClass({
+
+  handleSubmit: function(e) {
+    e.preventDefault();
+
+    var author = React.findDOMNode(this.refs.author).value.trim(),
+        text   = React.findDOMNode(this.refs.text).value.trim();
+
+    if (!author || !text) {
+      return;
+    }
+
+    this.props.onCommentSubmit({author: author, text: text});
+
+    React.findDOMNode(this.refs.author).value = '';
+    React.findDOMNode(this.refs.text).value = '';
+    return;
+  },
+
+  render: function() {
+    return (
+      <form className="commentForm" onSubmit={this.handleSubmit}>
+        <input type="text" placeholder="Your Name" ref="author" />
+        <input type="text" placeholder="Say Something..." ref="text" />
+        <input type="submit" value="Post" />
+      </form>
+    );
+  }
+});
+
+
+module.exports = CommentBox;
