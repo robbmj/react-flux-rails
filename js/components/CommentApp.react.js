@@ -2,10 +2,9 @@
 var React = require('react');
 var CommentStore = require('../stores/CommentStore');
 var CommentActions = require('../actions/CommentActions');
-/**
- * Retrieve the current TODO data from the TodoStore
- */
- function getCommentState() {
+
+
+function getCommentState() {
   return {
     data: CommentStore.getAll()
   };

@@ -29,13 +29,30 @@ app.get('/comments.json', function(req, res) {
   });
 });
 
-app.post('/comments.json', function(req, res) {
+app.post('/comment/create', function(req, res) {
   fs.readFile('public/comments.json', function(err, data) {
-    var comments = JSON.parse(data);
-    comments.push(req.body);
+    var comments = JSON.parse(data),
+        comment = req.body;
+
+    comment.id = comments.length + 1; // soooooo not safe, race condition
+    comments.push(comment);
+
     fs.writeFile('public/comments.json', JSON.stringify(comments, null, 4), function(err) {
       res.setHeader('Cache-Control', 'no-cache');
-      res.json(comments);
+      res.json({id: comment.id});
+    });
+  });
+});
+
+app.post('/comment/destroy', function(req, res) {
+  fs.readFile('public/comments.json', function(err, data) {
+
+    var comments = JSON.parse(data).filter(function(comment) {
+      return comment.id != req.body.id;
+    });
+
+    fs.writeFile('public/comments.json', JSON.stringify(comments, null, 4), function(err) {
+      res.setHeader('Cache-Control', 'no-cache');      
     });
   });
 });

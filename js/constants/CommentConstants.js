@@ -13,7 +13,14 @@ var keyMirror = require('keymirror');
 
 var CommentConstants = keyMirror({
   COMMENT_CREATE: null,
-  COMMENT_DESTROY: null
+  COMMENT_CREATE_SUCCESS: null,
+  COMMENT_CREATE_FAILED: null,
+  COMMENT_DESTROY: null,
+  COMMENT_DESTROY_SUCCESS: null,
+  COMMENT_DESTROY_FAILED: null,
+  COMMENT_INIT_LOAD_SUCCESS: null,
+  COMMENT_INIT_LOAD_FAILED: null
 });
 
+console.log(CommentConstants);
 module.exports = CommentConstants;

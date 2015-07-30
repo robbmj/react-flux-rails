@@ -16,33 +16,58 @@ var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 
+// TODO: change this to an object
 var _comments = [];
+
+var _deleted_comments = {};
+
+function loadSuccess(comments) {
+  _comments = comments;
+}
 
 /**
  * Create a Comment.
  * @param  {string} author The author of the comment
  * @param  {string} text The comment text
  */
-function create(author, text) {
-  // Hand waving here -- not showing how this interacts with XHR or persistent
-  // server-side storage.
-  // Using the current timestamp + random number in place of a real id.
-  var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
+function create(temp_id, author, text) {
   _comments.push({
-    id: id,
+    id: temp_id,
     author: author,
     text: text
   });
 }
 
+function updateTempID(temp_id, id) {
+  _comments.map(function (comment) {
+    if (comment.id == temp_id) {
+      comment.id = id;
+    }
+  });
+}
+
 /**
- * Delete a COmment.
+ * Delete a Comment.
  * @param  {string} id
  */
 function destroy(id) {
   _comments = _comments.filter(function (comment) {
-    return comment.id != id;
+    var ret = comment.id != id;
+    if (!ret) {
+      _deleted_comments[id] = comment;
+    }
+    return ret;
   });
+}
+
+// __deleted_comments
+function expunge(id) {
+  delete _deleted_comments[id];
+}
+
+function restore(id) {
+  _comments.push(_deleted_comments[id]);
+  expunge(id);
 }
 
 var CommentStore = assign({}, EventEmitter.prototype, {
@@ -66,21 +91,39 @@ var CommentStore = assign({}, EventEmitter.prototype, {
 
 // Register callback to handle all updates
 AppDispatcher.register(function(action) {
-  var text, author;
-
   switch (action.actionType) {
-    case CommentConstants.COMMENT_CREATE:
 
-      text = action.text.trim();
-      author = action.author.trim();
-      if (text !== '') {
-        create(author, text);
+    case CommentConstants.COMMENT_INIT_LOAD_SUCCESS:
+      loadSuccess(action.comments);
+      CommentStore.emitChange();
+      break;
+
+    case CommentConstants.COMMENT_CREATE:
+        create(action.id, action.author.trim(), action.text.trim());
         CommentStore.emitChange();
-      }
+      break;
+
+    case CommentConstants.COMMENT_CREATE_SUCCESS:
+      updateTempID(action.temp_id, action.id);
+      CommentStore.emitChange();
+      break;
+
+    case CommentConstants.COMMENT_CREATE_FAILED:
+      destroy(action.temp_id);
+      CommentStore.emitChange();
       break;
 
     case CommentConstants.COMMENT_DESTROY:
       destroy(action.id);
+      CommentStore.emitChange();
+      break;
+
+    case CommentConstants.COMMENT_DESTROY_SUCCESS:
+      expunge(action.id);
+      break;
+
+    case CommentConstants.COMMENT_DESTROY_FAILED:
+      restore(action.id);
       CommentStore.emitChange();
       break;
 
