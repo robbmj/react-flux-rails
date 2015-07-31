@@ -1,3 +1,3 @@
 [submodule "trial"]
 	path = trial
-	url = ./trial
+	url = https://github.com/robbmj/react-flux-server.git
