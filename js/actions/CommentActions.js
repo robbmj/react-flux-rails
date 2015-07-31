@@ -3,9 +3,7 @@ var AppDispatcher = require('../dispatcher/AppDispatcher');
 var CommentConstants = require('../constants/CommentConstants');
 
 
-var SEVER_ADDR = 'comments.json';
-var CREATE = 'comment/create';
-var DESTROY = 'comment/destroy';
+var COMMENT_ADDR = 'comments';
 
 function createCommentOnServer(comment) {
   var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
@@ -19,7 +17,7 @@ var CommentActions = {
 
   load: function() {
     jQuery.ajax({
-      url: SEVER_ADDR,
+      url: COMMENT_ADDR,
       dataType: 'json',
       cache: false,
       success: function(data) {
@@ -36,7 +34,7 @@ var CommentActions = {
           actionType: CommentConstants.COMMENT_INIT_LOAD_FAILED
         });
         
-        console.log(SEVER_ADDR, status, err.toString());
+        console.log(COMMENT_ADDR, status, err.toString());
       }
     });
   },
@@ -54,7 +52,7 @@ var CommentActions = {
     });
 
     jQuery.ajax({
-      url: CREATE,
+      url: COMMENT_ADDR,
       dataType: 'json',
       cache: false,
       type: 'POST',
@@ -75,7 +73,7 @@ var CommentActions = {
           id: id
         });
         
-        console.log(SEVER_ADDR, status, err.toString());
+        console.log(COMMENT_ADDR, status, err.toString());
       }
     });
   },
@@ -87,11 +85,11 @@ var CommentActions = {
     });
 
     jQuery.ajax({
-      url: DESTROY,
+      url: COMMENT_ADDR + '/' + id,
      // dataType: 'json',
       cache: false,
       type: 'POST',
-      data: {id: id},
+      data: { _method: 'delete', id: id},
       success: function(data) {
 
         AppDispatcher.dispatch({
@@ -107,7 +105,7 @@ var CommentActions = {
           id: id
         });
         
-        console.log(SEVER_ADDR, status, err.toString());
+        console.log(COMMENT_ADDR, status, err.toString());
       }
     });
   }

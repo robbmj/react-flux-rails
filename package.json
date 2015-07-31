@@ -22,7 +22,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "start": "watchify -o public/bundle.js -v -d js/app.js",
+    "start": "watchify -o trial/app/assets/javascripts/bundle.js -v -d js/app.js",
     "build": "browserify . -t [envify --NODE_ENV production] | uglifyjs -cm > public/bundle.min.js",
     "test": "jest"
   },

@@ -6,6 +6,6 @@ var CommentActions = require('./actions/CommentActions');
 CommentActions.load();
 
 React.render(
-	<CommentBox url="comments.json" pollInterval={2000} />,
+	<CommentBox />,
 	document.getElementById('content')
 );

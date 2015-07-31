@@ -22,5 +22,4 @@ var CommentConstants = keyMirror({
   COMMENT_INIT_LOAD_FAILED: null
 });
 
-console.log(CommentConstants);
 module.exports = CommentConstants;
