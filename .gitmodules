@@ -1,0 +1,3 @@
+[submodule "trial"]
+	path = trial
+	url = ./trial
